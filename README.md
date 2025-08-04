@@ -29,4 +29,4 @@ bash
 Copy
 Edit
 node index.js
-Acesse: http://localhost:3000
+Acesse: http://localhost:3002
