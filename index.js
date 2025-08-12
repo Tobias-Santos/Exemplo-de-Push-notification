@@ -6,29 +6,34 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
+const publicVapidKey = 'BIarTgzNGeEO_nMeJNcpesIC-6I4mTK_MluyFuL-uO4CwjoP8gs5ors5HW0llkszjZ5eb_dTMgK9HRdUPM_OXDg';
+const privateVapidKey = 'Oj4uPOU-s30fW_pKBLJ0_pXnFgPkHd2fu2G2VuG-e7M';
+
+webpush.setVapidDetails(
+  'mailto:seu-email@exemplo.com',
+  publicVapidKey,
+  privateVapidKey
+);
+
 const subscriptions = [];
 
+app.post('/subscribe', async (req, res) => {
+  const subscription = req.body;
+  console.log('Recebido subscription:', subscription);
+  subscriptions.push(subscription);
 
-// Receber inscrição
-app.post('/subscribe', (req, res) => {
-  subscriptions.push(req.body);
-  res.status(201).json({ message: 'Inscrito com sucesso!' });
-});
-
-// Simular envio
-app.get('/send', async (req, res) => {
-  const notificationPayload = JSON.stringify({
-    title: 'Nova notícia!',
-    body: 'Clique para ler agora.'
+  const payload = JSON.stringify({
+    title: 'Notificações ativadas!',
+    body: 'Você receberá notificações a partir de agora.'
   });
 
-  const results = await Promise.allSettled(
-    subscriptions.map(sub =>
-      webpush.sendNotification(sub, notificationPayload)
-    )
-  );
-
-  res.status(200).json({ resultados: results.length });
+  try {
+    await webpush.sendNotification(subscription, payload);
+    res.status(201).json({ message: 'Inscrito e notificado com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao enviar notificação:', error);
+    res.status(500).json({ error: 'Erro ao enviar notificação' });
+  }
 });
 
-app.listen(3002, () => console.log('Servidor no http://localhost:3002'));
+app.listen(3002, () => console.log('Servidor rodando em http://localhost:3002'));
